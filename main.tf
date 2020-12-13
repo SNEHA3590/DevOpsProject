@@ -107,6 +107,7 @@ resource "aws_instance" "Terraform_BASTION" {
    subnet_id = aws_subnet.terraform_subnet_1.id
    vpc_security_group_ids = ["${aws_security_group.sgpublic.id}"]
    associate_public_ip_address = false
+   associate_public_ip_address = true
 
   tags = {
     Name = "Terraform BASTION"
