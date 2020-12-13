@@ -106,7 +106,6 @@ resource "aws_instance" "Terraform_BASTION" {
    key_name = "devops_project"
    subnet_id = aws_subnet.terraform_subnet_1.id
    vpc_security_group_ids = ["${aws_security_group.sgpublic.id}"]
-   associate_public_ip_address = false
    associate_public_ip_address = true
 
   tags = {
@@ -148,7 +147,7 @@ resource "aws_security_group" "sgweb" {
     protocol = "tcp"
     cidr_blocks =  ["0.0.0.0/0"]
   }
-  
+ 
   vpc_id = aws_vpc.terraform.id
 
   tags = {
@@ -177,7 +176,7 @@ resource "aws_instance" "Terraform_WEB" {
 //Create Security Group for App Server
 resource "aws_security_group" "sgapp" {
   name = "Terraform_APP_SG"
-  description = "Allow mySQL and SSH access from terraform_subnet_2"
+  description = "Allow SSH access from terraform_subnet_2"
 
   ingress {
     from_port = 22
@@ -228,6 +227,13 @@ resource "aws_security_group" "sgclb" {
     ipv6_cidr_blocks =  ["::/0"]
   }
 
+  egress {
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
+    cidr_blocks     = ["0.0.0.0/0"]
+  }
+  
   vpc_id = aws_vpc.terraform.id
 
   tags = {
