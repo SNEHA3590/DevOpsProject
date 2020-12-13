@@ -1,4 +1,5 @@
-Steps:
+
+Steps followed in code:
 
 1. Create VPC
 2. Create 2 Private and 1 Public Subnets
@@ -15,6 +16,15 @@ Steps:
 7. Create NAT Gateway and connect it to Main Route Table
 8. Create ELB and assign it to Web Server.
 
+
 ![alt text](https://miro.medium.com/max/2470/1*-M3had7GOtSX56xUE1yOhg.png)
 
   
+
+Steps to setup 
+ 1. Install Terraform CLI(https://www.terraform.io/downloads.html)
+ 2. Install AWS CLI(https://s3.amazonaws.com/aws-cli/AWSCLI64PY3.msi)
+ 3. Clone the Project
+ 4. Open GitBash and do aws configure using access key and secret key
+ 5. Run the commands, Terraform init, Terraform plan, Terraform apply
+
