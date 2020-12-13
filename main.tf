@@ -12,7 +12,7 @@ resource "aws_vpc" "terraform" {
 resource "aws_subnet" "terraform_subnet_1" {
   vpc_id     = aws_vpc.terraform.id
   cidr_block = "20.0.1.0/24"
-  availability_zone = "us-west-2a"
+  availability_zone = "us-west-1a"
 
   tags = {
     Name = "bastion subnet"
@@ -22,7 +22,7 @@ resource "aws_subnet" "terraform_subnet_1" {
 resource "aws_subnet" "terraform_subnet_2" {
   vpc_id     = aws_vpc.terraform.id
   cidr_block = "20.0.2.0/24"
-  availability_zone = "us-west-2a"
+  availability_zone = "us-west-1a"
 
   tags = {
     Name = "Web subnet"
@@ -32,7 +32,7 @@ resource "aws_subnet" "terraform_subnet_2" {
 resource "aws_subnet" "terraform_subnet_3" {
   vpc_id     = aws_vpc.terraform.id
   cidr_block = "20.0.3.0/24"
-  availability_zone = "us-west-2a"
+  availability_zone = "us-west-1a"
 
   tags = {
     Name = "App subnet"
@@ -108,21 +108,21 @@ resource "aws_security_group" "sgpublic" {
     from_port = -1
     to_port = -1
     protocol = "icmp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["20.0.0.0/8"]
   }
 
   ingress {
     from_port = 22
     to_port = 22
     protocol = "tcp"
-    cidr_blocks =  ["0.0.0.0/0"]
+    cidr_blocks =  ["20.0.0.0/8"]
   }
   
   egress {
     from_port       = 0
     to_port         = 0
     protocol        = "-1"
-    cidr_blocks     = ["0.0.0.0/0"]
+    cidr_blocks     = ["20.0.0.0/8"]
   }
   
   vpc_id = aws_vpc.terraform.id
@@ -141,7 +141,7 @@ resource "aws_instance" "Terraform_BASTION" {
    key_name = "devops_project"
    subnet_id = aws_subnet.terraform_subnet_1.id
    vpc_security_group_ids = ["${aws_security_group.sgpublic.id}"]
-   associate_public_ip_address = true
+   associate_public_ip_address = false
 
   tags = {
     Name = "Terraform BASTION"
@@ -175,12 +175,19 @@ resource "aws_security_group" "sgweb" {
     protocol = "tcp"
     cidr_blocks =  ["20.0.1.0/24"]
   }
-
+  
+  ingress {
+    from_port = 443
+    to_port = 443
+    protocol = "tcp"
+    cidr_blocks =  ["0.0.0.0/0"]
+  }
+  
   egress {
     from_port       = 0
     to_port         = 0
     protocol        = "-1"
-    cidr_blocks     = ["0.0.0.0/0"]
+    cidr_blocks     = ["20.0.0.0/8"]
   }
   
   vpc_id = aws_vpc.terraform.id
@@ -217,16 +224,15 @@ resource "aws_security_group" "sgapp" {
     from_port = 22
     to_port = 22
     protocol = "tcp"
-    cidr_blocks =  ["20.0.2.0/24"]
+    cidr_blocks =  ["20.0.1.0/24"]
   }
-
-  egress {
+  
+   egress {
     from_port       = 0
     to_port         = 0
-    protocol        = "-1"
-    cidr_blocks     = ["0.0.0.0/0"]
+    protocol        = "tcp"
+    cidr_blocks     = ["20.0.0.0/8"]
   }
-
   
   vpc_id = aws_vpc.terraform.id
 
@@ -290,6 +296,13 @@ resource "aws_elb" "clb" {
     lb_protocol       = "http"
   }
  
+  listener {
+    instance_port     = 443
+    instance_protocol = "https"
+    lb_port           = 443
+    lb_protocol       = "https"
+	ssl_certificate_id = "arn:aws:acm:us-west-1:286281125721:certificate/e99e55d1-72ac-4de4-a431-058a669c0387"
+  }
   health_check {
     healthy_threshold   = 2
     unhealthy_threshold = 2
