@@ -12,7 +12,7 @@ resource "aws_vpc" "terraform" {
 resource "aws_subnet" "terraform_subnet_1" {
   vpc_id     = aws_vpc.terraform.id
   cidr_block = "20.0.1.0/24"
-  availability_zone = "us-west-1a"
+  availability_zone = "us-west-2a"
 
   tags = {
     Name = "bastion subnet"
@@ -22,7 +22,7 @@ resource "aws_subnet" "terraform_subnet_1" {
 resource "aws_subnet" "terraform_subnet_2" {
   vpc_id     = aws_vpc.terraform.id
   cidr_block = "20.0.2.0/24"
-  availability_zone = "us-west-1a"
+  availability_zone = "us-west-2a"
 
   tags = {
     Name = "Web subnet"
@@ -32,7 +32,7 @@ resource "aws_subnet" "terraform_subnet_2" {
 resource "aws_subnet" "terraform_subnet_3" {
   vpc_id     = aws_vpc.terraform.id
   cidr_block = "20.0.3.0/24"
-  availability_zone = "us-west-1a"
+  availability_zone = "us-west-2a"
 
   tags = {
     Name = "App subnet"
