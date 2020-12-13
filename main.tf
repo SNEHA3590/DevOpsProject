@@ -12,8 +12,9 @@ resource "aws_vpc" "terraform" {
 resource "aws_subnet" "terraform_subnet_1" {
   vpc_id     = aws_vpc.terraform.id
   cidr_block = "20.0.1.0/24"
-  availability_zone = "us-west-1a"
-
+  availability_zone = "us-east-1a"
+  map_public_ip_on_launch   = true
+  
   tags = {
     Name = "bastion subnet"
   }
@@ -22,7 +23,7 @@ resource "aws_subnet" "terraform_subnet_1" {
 resource "aws_subnet" "terraform_subnet_2" {
   vpc_id     = aws_vpc.terraform.id
   cidr_block = "20.0.2.0/24"
-  availability_zone = "us-west-1a"
+  availability_zone = "us-east-1a"
 
   tags = {
     Name = "Web subnet"
@@ -32,7 +33,7 @@ resource "aws_subnet" "terraform_subnet_2" {
 resource "aws_subnet" "terraform_subnet_3" {
   vpc_id     = aws_vpc.terraform.id
   cidr_block = "20.0.3.0/24"
-  availability_zone = "us-west-1a"
+  availability_zone = "us-east-1a"
 
   tags = {
     Name = "App subnet"
@@ -68,13 +69,17 @@ resource "aws_route_table_association" "a" {
   route_table_id = aws_route_table.rt.id
 }
 
-//Create Elastic-IP 
-resource "aws_eip" "amazon-ip" {
-  vpc              = true
+// Route Table - Subnet Association
+resource "aws_route_table_association" "b" {
+  subnet_id      = aws_subnet.terraform_subnet_2.id
+  route_table_id = aws_route_table.rt.id
 }
 
-
-
+// Route Table - Subnet Association
+resource "aws_route_table_association" "c" {
+  subnet_id      = aws_subnet.terraform_subnet_3.id
+  route_table_id = aws_route_table.rt.id
+}
 
 // Create BASTION Instance and Security Group
 
@@ -87,8 +92,9 @@ resource "aws_security_group" "sgpublic" {
     from_port = 22
     to_port = 22
     protocol = "tcp"
-    cidr_blocks =  ["0.0.0.0/0"]
+    cidr_blocks =  ["0.0.0.0/0"] //can provide ip address
   }
+
 
   vpc_id = aws_vpc.terraform.id
 
@@ -101,12 +107,11 @@ resource "aws_security_group" "sgpublic" {
 
 # Define webserver inside the public subnet
 resource "aws_instance" "Terraform_BASTION" {
-   ami  = "ami-08d9a394ac1c2994c"
+   ami  = "ami-0a91d9a59e80900ad"
    instance_type = "t2.micro"
    key_name = "devops_project"
    subnet_id = aws_subnet.terraform_subnet_1.id
    vpc_security_group_ids = ["${aws_security_group.sgpublic.id}"]
-   associate_public_ip_address = true
 
   tags = {
     Name = "Terraform BASTION"
@@ -141,13 +146,6 @@ resource "aws_security_group" "sgweb" {
     cidr_blocks =  ["20.0.1.0/24"]
   }
   
-  ingress {
-    from_port = 443
-    to_port = 443
-    protocol = "tcp"
-    cidr_blocks =  ["0.0.0.0/0"]
-  }
- 
   vpc_id = aws_vpc.terraform.id
 
   tags = {
@@ -159,13 +157,13 @@ resource "aws_security_group" "sgweb" {
 
 # Define webserver inside the public subnet
 resource "aws_instance" "Terraform_WEB" {
-   ami  = "ami-08d9a394ac1c2994c"
+   ami  = "ami-0a91d9a59e80900ad"
    instance_type = "t2.micro"
    key_name = "devops_project"
    subnet_id = aws_subnet.terraform_subnet_2.id
    vpc_security_group_ids = ["${aws_security_group.sgweb.id}"]
    user_data = file("${path.module}/startup.sh")
-
+   
   tags = {
     Name = "Terraform WEB"
   }
@@ -189,9 +187,17 @@ resource "aws_security_group" "sgapp" {
     from_port = 80
     to_port = 80
     protocol = "tcp"
-    cidr_blocks =  ["20.0.2.0/24"]
+    cidr_blocks =  ["20.0.1.0/24"]
   }
   
+  ingress {
+    from_port = 80
+    to_port = 80
+    protocol = "tcp"
+    cidr_blocks =  ["20.0.2.0/24"]
+  }
+
+
   vpc_id = aws_vpc.terraform.id
 
   tags = {
@@ -203,7 +209,7 @@ resource "aws_security_group" "sgapp" {
 
 # Define webserver inside the public subnet
 resource "aws_instance" "Terraform_APP" {
-   ami  = "ami-08d9a394ac1c2994c"
+   ami  = "ami-0a91d9a59e80900ad"
    instance_type = "t2.micro"
    key_name = "devops_project"
    subnet_id = aws_subnet.terraform_subnet_3.id
@@ -227,6 +233,14 @@ resource "aws_security_group" "sgclb" {
     ipv6_cidr_blocks =  ["::/0"]
   }
 
+  ingress {
+    from_port = 443
+    to_port = 443
+    protocol = "tcp"
+    cidr_blocks =  ["0.0.0.0/0"]
+    ipv6_cidr_blocks =  ["::/0"]
+  }
+  
   egress {
     from_port       = 0
     to_port         = 0
@@ -259,7 +273,7 @@ resource "aws_elb" "clb" {
     instance_protocol = "https"
     lb_port           = 443
     lb_protocol       = "https"
-	ssl_certificate_id = "arn:aws:acm:us-west-1:286281125721:certificate/d81af1e9-b7c5-48e8-8746-87785b0dffc0"
+	ssl_certificate_id = "arn:aws:acm:us-east-1:286281125721:certificate/d052023d-b73e-48f3-b6a4-c82c4ad6091c"
   }
   	
   health_check {
