@@ -117,8 +117,14 @@ resource "aws_security_group" "sgpublic" {
     protocol = "tcp"
     cidr_blocks =  ["0.0.0.0/0"]
   }
-
-
+  
+  egress {
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
+    cidr_blocks     = ["0.0.0.0/0"]
+  }
+  
   vpc_id = aws_vpc.terraform.id
 
   tags = {
@@ -130,9 +136,9 @@ resource "aws_security_group" "sgpublic" {
 
 # Define webserver inside the public subnet
 resource "aws_instance" "Terraform_BASTION" {
-   ami  = "ami-0a91d9a59e80900ad"
+   ami  = "ami-08d9a394ac1c2994c"
    instance_type = "t2.micro"
-   key_name = "MBP"
+   key_name = "devops_project"
    subnet_id = aws_subnet.terraform_subnet_1.id
    vpc_security_group_ids = ["${aws_security_group.sgpublic.id}"]
    associate_public_ip_address = true
@@ -142,11 +148,11 @@ resource "aws_instance" "Terraform_BASTION" {
   }
 }
 
-// Create Web App Instance and Security Group
+// Create Web Instance and Security Group
 
-//Create Security Group for Web App Server
-resource "aws_security_group" "sgwebapp" {
-  name = "Terraform_WEB_APP_SG"
+//Create Security Group for Web Server
+resource "aws_security_group" "sgweb" {
+  name = "Terraform_WEB_SG"
   description = "Allow Ping, HTTP and SSH access from terraform_subnet_1"
 
   ingress {
@@ -170,28 +176,33 @@ resource "aws_security_group" "sgwebapp" {
     cidr_blocks =  ["20.0.1.0/24"]
   }
 
- 
-
+  egress {
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
+    cidr_blocks     = ["0.0.0.0/0"]
+  }
+  
   vpc_id = aws_vpc.terraform.id
 
   tags = {
-    Name = "Terraform WEB APP SG"
+    Name = "Terraform WEB SG"
   }
 }
 
 //Create Instance and Attach Security Group
 
 # Define webserver inside the public subnet
-resource "aws_instance" "Terraform_WEB_APP" {
-   ami  = "ami-0a91d9a59e80900ad"
+resource "aws_instance" "Terraform_WEB" {
+   ami  = "ami-08d9a394ac1c2994c"
    instance_type = "t2.micro"
-   key_name = "MBP"
+   key_name = "devops_project"
    subnet_id = aws_subnet.terraform_subnet_2.id
-   vpc_security_group_ids = ["${aws_security_group.sgwebapp.id}"]
+   vpc_security_group_ids = ["${aws_security_group.sgweb.id}"]
    user_data = file("${path.module}/startup.sh")
 
   tags = {
-    Name = "Terraform WEB APP"
+    Name = "Terraform WEB"
   }
 }
 
@@ -203,20 +214,20 @@ resource "aws_security_group" "sgapp" {
   description = "Allow mySQL and SSH access from terraform_subnet_2"
 
   ingress {
-    from_port = 3306
-    to_port = 3306
-    protocol = "tcp"
-    cidr_blocks = ["20.0.2.0/24"]
-  }
-
-  ingress {
     from_port = 22
     to_port = 22
     protocol = "tcp"
     cidr_blocks =  ["20.0.2.0/24"]
   }
 
- 
+  egress {
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
+    cidr_blocks     = ["0.0.0.0/0"]
+  }
+
+  
   vpc_id = aws_vpc.terraform.id
 
   tags = {
@@ -228,9 +239,9 @@ resource "aws_security_group" "sgapp" {
 
 # Define webserver inside the public subnet
 resource "aws_instance" "Terraform_APP" {
-   ami  = "ami-0a91d9a59e80900ad"
+   ami  = "ami-08d9a394ac1c2994c"
    instance_type = "t2.micro"
-   key_name = "MBP"
+   key_name = "devops_project"
    subnet_id = aws_subnet.terraform_subnet_3.id
    vpc_security_group_ids = ["${aws_security_group.sgapp.id}"]
 
@@ -266,7 +277,7 @@ resource "aws_security_group" "sgclb" {
   }
 }
 
-//Create Classic Load Balancer and associate it to our Terraform Web App
+//Create Classic Load Balancer and associate it to our Terraform Web 
 resource "aws_elb" "clb" {
   name               = "terraform-clb"
   subnets            = [aws_subnet.terraform_subnet_1.id]
@@ -278,7 +289,7 @@ resource "aws_elb" "clb" {
     lb_port           = 80
     lb_protocol       = "http"
   }
-
+ 
   health_check {
     healthy_threshold   = 2
     unhealthy_threshold = 2
@@ -287,7 +298,7 @@ resource "aws_elb" "clb" {
     interval            = 30
   }
 
-  instances                   = [aws_instance.Terraform_WEB_APP.id]
+  instances                   = [aws_instance.Terraform_WEB.id]
   cross_zone_load_balancing   = true
   idle_timeout                = 300
   connection_draining         = true
