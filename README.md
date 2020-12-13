@@ -13,8 +13,7 @@ Steps followed in code:
 6. 
     6.1 --> Create Terraform APP Security Group
     6.2 --> Create Terraform_APP Instance and attach devops_project keypair
-7. Create NAT Gateway and connect it to Main Route Table
-8. Create ELB and assign it to Web Server.
+7. Create ELB and assign it to Web Server.
 
 
 Steps to setup 
