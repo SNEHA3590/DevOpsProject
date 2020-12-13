@@ -73,29 +73,8 @@ resource "aws_eip" "amazon-ip" {
   vpc              = true
 }
 
-//Create NAT Gateway and Associate EIP to it
-resource "aws_nat_gateway" "natgw" {
-  allocation_id = aws_eip.amazon-ip.id
-  subnet_id     = aws_subnet.terraform_subnet_1.id
 
-  tags = {
-    Name = "Terraform NAT gw"
-  }
-}
 
-//Associate NAT gw to Main Route Table
-resource "aws_default_route_table" "r" {
-  default_route_table_id = aws_vpc.terraform.default_route_table_id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.natgw.id
-  }
-
-  tags = {
-    Name = "Terraform Default Route Table"
-  }
-}
 
 // Create BASTION Instance and Security Group
 
