@@ -94,8 +94,15 @@ resource "aws_security_group" "sgpublic" {
     protocol = "tcp"
     cidr_blocks =  ["0.0.0.0/0"] //can provide ip address
   }
+  
+  egress {
+    from_port = 0
+    to_port = 0
+    protocol = "tcp"
+    cidr_blocks =  ["0.0.0.0/0"]
+  }
 
-
+ 
   vpc_id = aws_vpc.terraform.id
 
   tags = {
@@ -146,6 +153,13 @@ resource "aws_security_group" "sgweb" {
     cidr_blocks =  ["20.0.1.0/24"]
   }
   
+  egress {
+    from_port = 0
+    to_port = 0
+    protocol = "tcp"
+    cidr_blocks =  ["0.0.0.0/0"]
+  }
+
   vpc_id = aws_vpc.terraform.id
 
   tags = {
