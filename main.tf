@@ -105,26 +105,12 @@ resource "aws_security_group" "sgpublic" {
   description = "Allow Ping and SSH access "
 
   ingress {
-    from_port = -1
-    to_port = -1
-    protocol = "icmp"
-    cidr_blocks = ["20.0.0.0/8"]
-  }
-
-  ingress {
     from_port = 22
     to_port = 22
     protocol = "tcp"
-    cidr_blocks =  ["20.0.0.0/8"]
+    cidr_blocks =  ["0.0.0.0/0"]
   }
-  
-  egress {
-    from_port       = 0
-    to_port         = 0
-    protocol        = "-1"
-    cidr_blocks     = ["20.0.0.0/8"]
-  }
-  
+
   vpc_id = aws_vpc.terraform.id
 
   tags = {
@@ -156,17 +142,17 @@ resource "aws_security_group" "sgweb" {
   description = "Allow Ping, HTTP and SSH access from terraform_subnet_1"
 
   ingress {
-    from_port = -1
-    to_port = -1
-    protocol = "icmp"
-    cidr_blocks = ["20.0.1.0/24"]
-  }
-
-  ingress {
     from_port = 80
     to_port = 80
     protocol = "tcp"
     cidr_blocks =  ["20.0.1.0/24"]
+  }
+  
+  ingress {
+    from_port = 80
+    to_port = 80
+    protocol = "tcp"
+    cidr_blocks =  ["20.0.3.0/24"]
   }
 
   ingress {
@@ -181,13 +167,6 @@ resource "aws_security_group" "sgweb" {
     to_port = 443
     protocol = "tcp"
     cidr_blocks =  ["0.0.0.0/0"]
-  }
-  
-  egress {
-    from_port       = 0
-    to_port         = 0
-    protocol        = "-1"
-    cidr_blocks     = ["20.0.0.0/8"]
   }
   
   vpc_id = aws_vpc.terraform.id
@@ -227,11 +206,11 @@ resource "aws_security_group" "sgapp" {
     cidr_blocks =  ["20.0.1.0/24"]
   }
   
-   egress {
-    from_port       = 0
-    to_port         = 0
-    protocol        = "tcp"
-    cidr_blocks     = ["20.0.0.0/8"]
+  ingress {
+    from_port = 80
+    to_port = 80
+    protocol = "tcp"
+    cidr_blocks =  ["20.0.2.0/24"]
   }
   
   vpc_id = aws_vpc.terraform.id
@@ -269,13 +248,6 @@ resource "aws_security_group" "sgclb" {
     ipv6_cidr_blocks =  ["::/0"]
   }
 
-  egress {
-    from_port       = 0
-    to_port         = 0
-    protocol        = "-1"
-    cidr_blocks     = ["0.0.0.0/0"]
-  }
-
   vpc_id = aws_vpc.terraform.id
 
   tags = {
@@ -296,13 +268,6 @@ resource "aws_elb" "clb" {
     lb_protocol       = "http"
   }
  
-  listener {
-    instance_port     = 443
-    instance_protocol = "https"
-    lb_port           = 443
-    lb_protocol       = "https"
-	ssl_certificate_id = "arn:aws:acm:us-west-1:286281125721:certificate/e99e55d1-72ac-4de4-a431-058a669c0387"
-  }
   health_check {
     healthy_threshold   = 2
     unhealthy_threshold = 2
